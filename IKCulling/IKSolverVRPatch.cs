@@ -14,14 +14,29 @@ namespace IKCulling
     [HarmonyPatch]
     internal class IKSolverVRPatch
     {
+        private static readonly MethodInfo deltaTimeInjector = AccessTools.Method(typeof(IKCulling), nameof(IKCulling.getProgressiveDeltaTime));
         private static readonly MethodInfo workerTimeGetter = AccessTools.PropertyGetter(typeof(Worker), "Time");
-        private static readonly MethodInfo deltaTimeInjector = AccessTools.Method(typeof(IKSolverVRPatch), nameof(newDeltaTime));
+
+        [HarmonyTargetMethods]
+        private static IEnumerable<MethodBase> TargetMethods()
+        {
+            var methods = AccessTools.GetTypesFromAssembly(AccessTools.AllAssemblies().First(assembly => assembly.GetName().Name == "FrooxEngine"))
+                .Where(type => !type.IsAbstract && type.FullName.Contains("IK"))
+                .SelectMany(type => type.GetMethods(AccessTools.all).Where(method => method.Name == "Solve"));
+
+            IKCulling.Msg("Found methods to patch:");
+
+            foreach (var method in methods)
+                IKCulling.Msg(method.FullDescription());
+
+            return methods;
+        }
 
         private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
             var skipNext = false;
 
-            foreach(var instruction in instructions)
+            foreach (var instruction in instructions)
             {
                 if (skipNext)
                 {
@@ -37,26 +52,6 @@ namespace IKCulling
                 else
                     yield return instruction;
             }
-        }
-
-        private static float newDeltaTime(IKSolverVR instance)
-        {
-            return instance.Time.Delta * 10;
-        }
-
-        [HarmonyTargetMethods]
-        private static IEnumerable<MethodBase> TargetMethods()
-        {
-            var methods = AccessTools.GetTypesFromAssembly(AccessTools.AllAssemblies().First(assembly => assembly.GetName().Name == "FrooxEngine"))
-                .Where(type => !type.IsAbstract && type.FullName.Contains("IK"))
-                .SelectMany(type => type.GetMethods(AccessTools.all).Where(method => method.Name == "Solve"));
-
-            IkCulling.IkCulling.Msg("Found methods to patch:");
-
-            foreach (var method in methods)
-                IkCulling.IkCulling.Msg(method.FullDescription());
-
-            return methods;
         }
     }
 }
