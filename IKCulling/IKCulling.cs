@@ -30,7 +30,7 @@ namespace IKCulling
         [AutoRegisterConfigKey]
         public static readonly ModConfigurationKey<float> Fov = new ModConfigurationKey<float>("Fov",
             "Field of view used for IkCulling, can be between 1 and -1.",
-            () => 0.5f, false, v => v <= 1f && v >= -1f);
+            () => 0.6f, false, v => v <= 1f && v >= -1f);
 
         [AutoRegisterConfigKey]
         public static readonly ModConfigurationKey<float> FovTransitionRange =
@@ -221,7 +221,6 @@ namespace IKCulling
             private static void OnCommonUpdatePostfix(VRIKAvatar __instance)
             {
                 var updateData = ikUpdateData.GetOrCreateValue(__instance);
-                Msg("Postfix with progress: " + updateData.UpdateProgress);
 
                 if (updateData.UpdateProgress >= 1)
                 {
@@ -237,7 +236,6 @@ namespace IKCulling
                 var updateData = ikUpdateData.GetOrCreateValue(__instance);
                 var updateAmount = getUpdateAmount(__instance);
                 updateData.UpdateProgress += updateAmount;
-                Msg("Changing update progress by " + updateAmount + " to " + updateData.UpdateProgress);
                 updateData.Delta += __instance.Time.Delta;
 
                 return updateData.UpdateProgress >= 1;
